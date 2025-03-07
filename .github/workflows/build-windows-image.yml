@@ -1,0 +1,31 @@
+name: build-unity-nanny-windows
+run-name: Build and push unity nanny for windows
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  prepare:
+    runs-on: [Windows-2022]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: "Configure AWS Credentials"
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_DEV }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_DEV }}
+          aws-region: us-east-1
+
+      - name: Login to Amazon ECR
+        id: login-ecr-staging
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build unity nanny for windows
+        run: |
+          docker build . -f Dockerfile.windows 348475589284.dkr.ecr.us-east-1.amazonaws.com/logzio-windows:v3
+          docker push 348475589284.dkr.ecr.us-east-1.amazonaws.com/logzio-windows:v3
+
+      - name: Logout of Amazon ECR
+        run: docker logout ${{ steps.login-ecr-staging.outputs.registry }}

@@ -1,0 +1,24 @@
+FROM fluent/fluentd:v1.14-windows-ltsc2022-1
+
+USER ContainerAdministrator
+WORKDIR C:/fluentd
+
+COPY Gemfile* C:/fluentd/
+RUN bundle install --gemfile=C:/fluentd/Gemfile --path=C:/fluentd/vendor/bundle ; \
+    gem sources --clear-all ; \
+    Remove-Item -Recurse -Force C:/Windows/Temp/*
+
+# Default values for fluent.conf
+ENV LOGZIO_BUFFER_TYPE "file"
+ENV LOGZIO_BUFFER_PATH "C:/var/log/fluentd-buffers/stackdriver.buffer"
+ENV LOGZIO_OVERFLOW_ACTION "block"
+ENV LOGZIO_CHUNK_LIMIT_SIZE "2M"
+ENV LOGZIO_QUEUE_LIMIT_LENGTH "6"
+ENV LOGZIO_FLUSH_INTERVAL "5s"
+ENV LOGZIO_RETRY_MAX_INTERVAL "30"
+ENV LOGZIO_RETRY_FOREVER "true"
+ENV LOGZIO_FLUSH_THREAD_COUNT "2"
+ENV INCLUDE_NAMESPACE ""
+
+# Defaults value for system.conf
+ENV LOGZIO_LOG_LEVEL "info"
