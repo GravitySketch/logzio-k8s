@@ -4,9 +4,7 @@ USER ContainerAdministrator
 WORKDIR C:/fluentd
 
 COPY Gemfile* C:/fluentd/
-RUN bundle install --gemfile=C:/fluentd/Gemfile --path=C:/fluentd/vendor/bundle ; \
-    gem sources --clear-all ; \
-    Remove-Item -Recurse -Force C:/Windows/Temp/*
+RUN bundle install --gemfile=C:/fluentd/Gemfile --path=C:/fluentd/vendor/bundle
 
 # Default values for fluent.conf
 ENV LOGZIO_BUFFER_TYPE "file"
