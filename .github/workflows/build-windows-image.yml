@@ -1,8 +1,7 @@
-name: build-unity-nanny-windows
-run-name: Build and push unity nanny for windows
+name: build-fluentd-windows
+run-name: Build and push our windows fluentd container
 
 on:
-  pull_request:
   workflow_dispatch:
 
 jobs:
