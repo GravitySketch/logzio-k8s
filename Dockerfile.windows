@@ -1,0 +1,52 @@
+FROM mcr.microsoft.com/windows/servercore:ltsc2022 as base
+
+WORKDIR C:\\fluent
+
+ARG RUBY_VERSION=2.7.0
+ARG RUBY_PATH=ruby27
+
+RUN setx PATH "%PATH%;C:\\fluent\\vendor\\bundle\\ruby\\%RUBY_VERSION%\\bin;C:\\%RUBY_PATH%\\bin"
+
+# skip runtime bundler installation
+ENV FLUENTD_DISABLE_BUNDLER_INJECTION 1
+
+## fluent/fluentd-kubernetes-daemonset:v1.14-debian-logzio-amd64-1 is on ruby 2.7.5p203 (2021-11-24 revision f69aeb8314) [x86_64-linux]
+COPY Gemfile.windows C:\\fluent\\Gemfile
+RUN powershell -Command "Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))"
+RUN powershell -Command "Invoke-WebRequest 'https://github.com/msys2/msys2-installer/releases/download/2025-02-21/msys2-x86_64-20250221.exe' -OutFile msys2-installer.exe"
+RUN choco install -y ruby --version 2.7.5.1 --params "'/InstallDir:C:\\%RUBY_PATH%'"
+RUN msys2-installer.exe in --confirm-command --accept-messages --root "C:\\%RUBY_PATH%\\msys64" -d
+ # && choco install -y msys2 --params "'/NoPath /NoUpdate /InstallDir:C:\\%RUBY_PATH%\\msys64'"
+
+RUN refreshenv \
+  && ridk install 2 3 \
+  && echo gem: --no-document >> C:\\ProgramData\\gemrc \
+  && gem install bundler --version 1.16.2 \
+  && bundle config silence_root_warning true \
+  && bundle install --gemfile=C:\\fluent\\Gemfile --path=C:\\fluent\\vendor\\bundle \
+  && gem sources --clear-all
+
+RUN setx /M GEM_PATH "C:\\fluent\\vendor\\bundle\\ruby\\%RUBY_VERSION%" \
+ && setx /M GEM_HOME "C:\\fluent\\vendor\\bundle\\ruby\\%RUBY_VERSION%"
+
+# Default values for fluent.conf
+ENV LOGZIO_BUFFER_TYPE "file"
+ENV LOGZIO_BUFFER_PATH "C:/fluentd/buffer"
+ENV LOGZIO_OVERFLOW_ACTION "block"
+ENV LOGZIO_CHUNK_LIMIT_SIZE "2M"
+ENV LOGZIO_QUEUE_LIMIT_LENGTH "6"
+ENV LOGZIO_FLUSH_INTERVAL "5s"
+ENV LOGZIO_RETRY_MAX_INTERVAL "30"
+ENV LOGZIO_RETRY_FOREVER "true"
+ENV LOGZIO_FLUSH_THREAD_COUNT "2"
+ENV INCLUDE_NAMESPACE ""
+
+# Defaults value for system.conf
+ENV LOGZIO_LOG_LEVEL "info"
+
+COPY .\\conf C:\\fluent\\conf
+COPY .\\plugins C:\\fluent\\plugin
+
+RUN powershell -Command "Remove-Item -Force C:\\%RUBY_PATH%\\lib\\ruby\\gems\\%RUBY_VERSION%\\cache\\*.gem; Remove-Item -Recurse -Force 'C:\\ProgramData\\chocolatey'"
+
+ENTRYPOINT ["cmd", "/k", "fluentd", "-c", "C:\\fluent\\conf\\fluent.conf", "-p", "C:\\fluent\\plugin"]
