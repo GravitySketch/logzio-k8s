@@ -1,0 +1,13 @@
+source "https://rubygems.org"
+
+gem "fluent-plugin-kubernetes_metadata_filter", ">=2.11.1"
+gem "fluent-plugin-concat", "~> 2.4.0"
+gem "fluent-plugin-json-in-json-2", ">= 1.0.2"
+gem "fluent-plugin-multi-format-parser", "~> 1.0"
+gem "fluent-plugin-grafana-loki", "~> 1.2", ">= 1.2.20"
+gem "fluent-plugin-detect-exceptions", "~> 0.0.12"
+gem "fluent-plugin-record-modifier", "~> 2.0.0"
+gem "win32-service", "~> 2.1"
+gem "win32-ipc", "~> 0.7"
+gem "win32-event", "~> 0.6"
+gem "windows-pr", "~> 1.2"
