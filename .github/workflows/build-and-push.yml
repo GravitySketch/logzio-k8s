@@ -1,12 +1,15 @@
 name: Build and push multi-arch image
 
 on:
+  pull_request:
+    branches:
+      - master
   workflow_dispatch:
-    inputs:
-      tag:
-        description: 'Image tag (e.g., v3, v4, latest)'
-        required: true
-        type: string
+  #  inputs:
+  #    tag:
+  #      description: 'Image tag (e.g., v3, v4, latest)'
+  #      required: true
+  #      type: string
 
 jobs:
   build:
@@ -27,9 +30,9 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push
-        uses: docker/build-push-action@v4
-        with:
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: ghcr.io/gravitysketch/logzio:${{ inputs.tag }}
+      #- name: Build and push
+      #  uses: docker/build-push-action@v4
+      #  with:
+      #    platforms: linux/amd64,linux/arm64
+      #    push: true
+      #    tags: ghcr.io/gravitysketch/logzio:${{ inputs.tag }}
