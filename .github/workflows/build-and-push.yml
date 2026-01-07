@@ -51,9 +51,9 @@ jobs:
         with:
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: ${{ matrix.environment.aws_account_id }}.dkr.ecr.us-east-1.amazonaws.com/logzio-k8s:${{ inputs.tag }}
-          cache-from: type=registry,ref=${{ matrix.environment.aws_account_id }}.dkr.ecr.us-east-1.amazonaws.com/logzio-k8s
-          cache-to: type=registry,ref=${{ matrix.environment.aws_account_id }}.dkr.ecr.us-east-1.amazonaws.com/logzio-k8s,mode=max
+          tags: ${{ matrix.environment.aws_account_id }}.dkr.ecr.us-east-1.amazonaws.com/logging:${{ inputs.tag }}
+          cache-from: type=registry,ref=${{ matrix.environment.aws_account_id }}.dkr.ecr.us-east-1.amazonaws.com/logging
+          cache-to: type=registry,ref=${{ matrix.environment.aws_account_id }}.dkr.ecr.us-east-1.amazonaws.com/logging,mode=max
 
       - name: Logout of Amazon ECR
         run: docker logout ${{ steps.login-ecr.outputs.registry }}
