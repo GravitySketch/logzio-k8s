@@ -1,0 +1,59 @@
+name: Build and push multi-arch image
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Image tag (e.g., v3, v4, latest)'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        environment:
+          - name: dev
+            aws_account_id: 348475589284
+            role_arn: arn:aws:iam::348475589284:role/Github_actions_role
+          - name: staging
+            aws_account_id: 720048933537
+            role_arn: arn:aws:iam::720048933537:role/Github_actions_role
+          - name: prod
+            aws_account_id: 560361624624
+            role_arn: arn:aws:iam::560361624624:role/Github_actions_role
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: us-east-1
+          role-to-assume: ${{ matrix.environment.role_arn }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ matrix.environment.aws_account_id }}.dkr.ecr.us-east-1.amazonaws.com/logging:${{ inputs.tag }}
+          cache-from: type=registry,ref=${{ matrix.environment.aws_account_id }}.dkr.ecr.us-east-1.amazonaws.com/logging
+          cache-to: type=registry,ref=${{ matrix.environment.aws_account_id }}.dkr.ecr.us-east-1.amazonaws.com/logging,mode=max
+
+      - name: Logout of Amazon ECR
+        run: docker logout ${{ steps.login-ecr.outputs.registry }}
